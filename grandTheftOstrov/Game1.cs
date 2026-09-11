@@ -14,28 +14,47 @@ public class Game1 : Game
     private float _carRotation; // Z rotace (v radiánech)
 
     private float _carSpeed = 500f; // Pixely za vteřinu
-    private float _turnSpeed = 8f;  // Rychlost zatáčení
+    private float _turnSpeed = 4f;  // Rychlost zatáčení
 
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
+
+        // Tímto řádkem donutíme hru běžet i na velmi slabých grafikách
+        _graphics.GraphicsProfile = GraphicsProfile.Reach;
+
+        int monitorWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width;
+        int monitorHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height;
+
+        // 2. Nastavíme oknu velikost přesně podle monitoru
+        _graphics.PreferredBackBufferWidth = monitorWidth;
+        _graphics.PreferredBackBufferHeight = monitorHeight;
+
+        // 3. Zapneme fullscreen
+        _graphics.IsFullScreen = true;
+
         IsMouseVisible = true;
     }
 
     protected override void Initialize()
     {
-        _carPosition = new Vector2(400, 300); // Startovní pozice uprostřed okna
+        _carPosition = new Vector2(_graphics.PreferredBackBufferHeight / 2, _graphics.PreferredBackBufferWidth / 2); // Startovní pozice uprostřed okna
         base.Initialize();
     }
 
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _carTexture = Texture2D.FromFile(GraphicsDevice, "car.png");
 
-        // Vytvoření prázdné textury 1x1 pixel
+        // Vygenerujeme dočasné auto: Červený obdélník 40x80 pixelů
+        _carTexture = new Texture2D(GraphicsDevice, 80, 40);
+        Color[] carColor = new Color[40 * 80];
+        Array.Fill(carColor, Color.Red); // Vyplníme pole červenou barvou
+        _carTexture.SetData(carColor);
+
+        // Prázdná textura pro budovy
         _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
-        _pixelTexture.SetData(new[] { Color.White });   
+        _pixelTexture.SetData(new[] { Color.White });
     }
 
     protected override void Update(GameTime gameTime)
@@ -60,6 +79,10 @@ public class Game1 : Game
             _carPosition.X -= (float)Math.Cos(_carRotation) * _carSpeed * deltaTime;
             _carPosition.Y -= (float)Math.Sin(_carRotation) * _carSpeed * deltaTime;
         }
+        if(kstate.IsKeyDown(Keys.Escape))
+        {
+            Exit();
+        }
 
         base.Update(gameTime);
     }
@@ -69,18 +92,17 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.DarkGray);
 
         // 1. Zjistíme aktuální velikost okna
-        float screenWidth = _graphics.PreferredBackBufferWidth;
-        float screenHeight = _graphics.PreferredBackBufferHeight;
+        float screenWidth = GraphicsDevice.Viewport.Width;
+        float screenHeight = GraphicsDevice.Viewport.Height;
 
-        // 2. Vytvoříme transformační matici kamery
-        // Nejprve posuneme svět do mínusu o pozici auta a pak ho posuneme do poloviny obrazovky
+        // Kamera (zůstává stejná)
         Matrix cameraTransform = Matrix.CreateTranslation(-_carPosition.X, -_carPosition.Y, 0) *
                                  Matrix.CreateTranslation(screenWidth / 2f, screenHeight / 2f, 0);
 
         // 3. Spustíme kreslení a předáme mu naši kameru
         _spriteBatch.Begin(transformMatrix: cameraTransform);
 
-        // Kreslení auta (zůstává úplně stejné)
+        // Kreslení auta
         Vector2 origin = new Vector2(_carTexture.Width / 2f, _carTexture.Height / 2f);
 
         _spriteBatch.Draw(
@@ -90,26 +112,24 @@ public class Game1 : Game
             Color.White,
             _carRotation,
             origin,
-            0.02f, // Tvoje zmenšené měřítko
+            1f, // Zmenšené měřítko
             SpriteEffects.None,
             0f
         );
 
+        // Kreslení testovací budovy 1
         _spriteBatch.Draw(
             _pixelTexture,
-            new Rectangle(200, 150, 200, 100), // Budova 200x100 pixelů
-            Color.Brown // Barva budovy
+            new Rectangle(200, 150, 200, 100),
+            Color.Brown
         );
 
-        // Vykreslení další budovy pro lepší orientaci
+        // Kreslení testovací budovy 2
         _spriteBatch.Draw(
             _pixelTexture,
             new Rectangle(600, 400, 150, 150),
             Color.DarkSlateGray
         );
-
-        // Sem bys pak dal ten foreach na vykreslování NPC a domů...
-        // foreach (var npc in npcs) { npc.Draw(_spriteBatch); }
 
         _spriteBatch.End();
         base.Draw(gameTime);
