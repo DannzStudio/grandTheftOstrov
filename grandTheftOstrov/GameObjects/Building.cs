@@ -9,12 +9,15 @@ public class Building : GameObject
     public int Width;
     public int Height;
 
+    public Texture2D Texture;
+    public Color ObjectColor = Color.White;
+
     // Konstruktor - co se stane, když budovu vytvoříme
     public Building(Texture2D texture, Vector2 position, int width, int height, Color color)
     {
-        Texture = texture;     // Zděděno z GameObject
-        Position = position;   // Zděděno z GameObject
-        ObjectColor = color;   // Zděděno z GameObject
+        Texture = texture; 
+        Position = position;   
+        ObjectColor = color;   
         Width = width;
         Height = height;
     }

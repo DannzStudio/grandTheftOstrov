@@ -24,8 +24,9 @@ public class Game1 : Game
         IsMouseVisible = true;
     }
 
-    private List<GameObject> _gameObjects;
-    private Car _player;
+    public List<GameObject> _gameObjects;
+    private Player _player;
+    private Car _car;
 
     protected override void Initialize()
     {
@@ -40,14 +41,22 @@ public class Game1 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
 
-        Texture2D tempCarTex = new Texture2D(GraphicsDevice, 40, 80);
-        Color[] carColor = new Color[40 * 80];
-        Array.Fill(carColor, Color.Red);
-        tempCarTex.SetData(carColor);
+        Texture2D carTexture = new Texture2D(GraphicsDevice, 32, 64);
+        Color[] carColors = new Color[32 * 64];
+        Array.Fill(carColors, Color.Red); // Nastavení všech pixelů na červenou barvu
+        carTexture.SetData(carColors);
+
+        Texture2D playerTexture = new Texture2D(GraphicsDevice, 32, 32);
+        Color[] playerColors = new Color[32 * 32];
+        Array.Fill(playerColors, Color.Black); // Nastavení všech pixelů na červenou barvu
+        playerTexture.SetData(playerColors);
 
         // Vytvoříme auto a přidáme ho k ostatním objektům
-        _player = new Car(tempCarTex, new Vector2(400, 300));
-        _gameObjects.Add(_player);
+        _player = new Player(playerTexture, new Vector2(400, 300), this);
+        
+
+        _car = new Car(carTexture, new Vector2(500, 300));
+        _gameObjects.Add(_car);
 
         // Prázdná textura pro budovy
         _pixelTexture = new Texture2D(GraphicsDevice, 1, 1);
@@ -56,6 +65,8 @@ public class Game1 : Game
         _gameObjects.Add(new Building(_pixelTexture, new Vector2(200, 150), 200, 100, Color.Brown));
         _gameObjects.Add(new Building(_pixelTexture, new Vector2(600, 400), 150, 150, Color.DarkSlateGray));
         _gameObjects.Add(new Building(_pixelTexture, new Vector2(-100, -200), 300, 120, Color.Gray));
+
+        _gameObjects.Add(_player);
     }
 
     protected override void Update(GameTime gameTime)
@@ -74,11 +85,11 @@ public class Game1 : Game
         float screenWidth = GraphicsDevice.Viewport.Width;
         float screenHeight = GraphicsDevice.Viewport.Height;
 
-        // Kamera (zůstává stejná)
+        // Kamera
         Matrix cameraTransform = Matrix.CreateTranslation(-_player.Position.X, -_player.Position.Y, 0) *
                          Matrix.CreateTranslation(screenWidth / 2f, screenHeight / 2f, 0);
 
-        // 3. Spustíme kreslení a předáme mu naši kameru
+        // Drawing
         _spriteBatch.Begin(transformMatrix: cameraTransform);
 
         foreach (var obj in _gameObjects)
