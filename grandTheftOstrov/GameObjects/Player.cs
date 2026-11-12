@@ -65,7 +65,7 @@ public class Player : GameObject
                     }
                 }
             }
-            else
+            else if (ridingObj.Speed == 0)
             {
                 ridingObj.isControlled = false;
                 Position.X += (float)Math.Cos(ridingObj.Rotation - MathF.PI / 2) * 37;

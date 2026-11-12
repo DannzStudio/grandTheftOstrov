@@ -7,6 +7,7 @@ public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private RenderTarget2D _backBuffer;
 
     public Game1()
     {
@@ -17,7 +18,6 @@ public class Game1 : Game
         _graphics.PreferredBackBufferWidth = 1280;
         _graphics.PreferredBackBufferHeight = 720;
 
-        // Úplné vypnutí limitů a VSyncu
         _graphics.SynchronizeWithVerticalRetrace = false;
         IsFixedTimeStep = false;
 
@@ -31,6 +31,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         _gameObjects = new List<GameObject>();
+        _backBuffer = new RenderTarget2D(GraphicsDevice, 1280, 720);
 
         base.Initialize();
     }
@@ -80,16 +81,16 @@ public class Game1 : Game
 
     protected override void Draw(GameTime gameTime)
     {
+
+        GraphicsDevice.SetRenderTarget(_backBuffer);
         GraphicsDevice.Clear(Color.DarkGray);
 
-        float screenWidth = GraphicsDevice.Viewport.Width;
-        float screenHeight = GraphicsDevice.Viewport.Height;
+        float screenWidth = _backBuffer.Width;
+        float screenHeight = _backBuffer.Height;
 
-        // Kamera
         Matrix cameraTransform = Matrix.CreateTranslation(-_player.Position.X, -_player.Position.Y, 0) *
-                         Matrix.CreateTranslation(screenWidth / 2f, screenHeight / 2f, 0);
+                                 Matrix.CreateTranslation(screenWidth / 2f, screenHeight / 2f, 0);
 
-        // Drawing
         _spriteBatch.Begin(transformMatrix: cameraTransform);
 
         foreach (var obj in _gameObjects)
@@ -98,6 +99,20 @@ public class Game1 : Game
         }
 
         _spriteBatch.End();
+
+
+
+        GraphicsDevice.SetRenderTarget(null); 
+        GraphicsDevice.Clear(Color.Black);
+
+        _spriteBatch.Begin(samplerState: SamplerState.PointClamp);
+
+        Rectangle screenRectangle = new Rectangle(0, 0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height);
+
+        _spriteBatch.Draw(_backBuffer, screenRectangle, Color.White);
+
+        _spriteBatch.End();
+
         base.Draw(gameTime);
     }
 }
