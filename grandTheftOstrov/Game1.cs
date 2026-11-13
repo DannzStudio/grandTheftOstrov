@@ -56,7 +56,7 @@ public class Game1 : Game
         _player = new Player(playerTexture, new Vector2(400, 300), this);
         
 
-        _car = new Car(carTexture, new Vector2(500, 300));
+        _car = new Car(carTexture, new Vector2(500, 300), this);
         _gameObjects.Add(_car);
 
         // Prázdná textura pro budovy

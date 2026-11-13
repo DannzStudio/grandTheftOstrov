@@ -12,6 +12,8 @@ public class Building : GameObject
     public Texture2D Texture;
     public Color ObjectColor = Color.White;
 
+    public Rectangle rect;
+
     // Konstruktor - co se stane, když budovu vytvoříme
     public Building(Texture2D texture, Vector2 position, int width, int height, Color color)
     {
@@ -20,10 +22,10 @@ public class Building : GameObject
         ObjectColor = color;   
         Width = width;
         Height = height;
+
+        rect = new Rectangle((int)position.X, (int)position.Y, width, height);
     }
 
-    // Přepíšeme základní kreslení (override), protože budovy
-    // teď kreslíme roztáhnutím 1x1 pixelu do obdélníku (Rectangle)
     public override void Draw(SpriteBatch spriteBatch)
     {
         spriteBatch.Draw(Texture, new Rectangle((int)Position.X, (int)Position.Y, Width, Height), ObjectColor);

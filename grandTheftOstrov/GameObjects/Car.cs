@@ -19,33 +19,54 @@ public class Car : GameObject
     public float ReverseDelay = 1f;
     private float _currentReverseDelay = 0f;
 
+    public Game1 game;
     public bool isControlled = false;
     public Texture2D Texture;
     public Color ObjectColor = Color.White;
 
-    public Rectangle rect;
-
-    public Car(Texture2D texture, Vector2 startPosition)
+    public Car(Texture2D texture, Vector2 startPosition, Game1 game)
     {
         Texture = texture;
         Position = startPosition;
-        rect = new Rectangle(
-            (int)(startPosition.X - texture.Width / 2f),
-            (int)(startPosition.Y - texture.Height / 2f),
-            texture.Width,
-            texture.Height
-        );
+        this.game = game;
     }
 
     public override void Update(GameTime gameTime)
     {
-        if (!isControlled) return;
-
-        var kstate = Keyboard.GetState();
         float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        var kstate = Keyboard.GetState();
 
-        float movementFactor = Math.Clamp(Math.Abs(Speed) / 50f, 0f, 1f);
-        float understeerFactor = 1f - (Math.Abs(Speed) / MaxSpeed) * 0.2f;
+        if (isControlled) Control(deltaTime, kstate);
+        else EngineBrake(deltaTime, 1);
+
+        Vector2 forward = new Vector2((float)Math.Cos(Rotation), (float)Math.Sin(Rotation));
+        Vector2 desiredVelocity = forward * Speed;
+
+        float grip = 5f;
+
+        if (kstate.IsKeyDown(Keys.Space) && isControlled)
+        {
+            grip = 1f;
+            EngineBrake(deltaTime, 0.5f);
+        }
+
+        // Zjistíme fyzickou rychlost
+        float actualPhysicalSpeed = Velocity.Length();
+
+        if (Speed == 0 && actualPhysicalSpeed < 15f && !kstate.IsKeyDown(Keys.Space))
+        {
+            Velocity = Vector2.Zero;
+        }
+
+        Velocity = Vector2.Lerp(Velocity, desiredVelocity, grip * deltaTime);
+        Position += Velocity * deltaTime;
+    }
+
+    private void Control(float deltaTime, KeyboardState kstate)
+    {
+        float actualPhysicalSpeed = Velocity.Length();
+        float movementFactor = Math.Clamp(actualPhysicalSpeed / 50f, 0f, 1f);
+        float understeerFactor = 1f - (actualPhysicalSpeed / MaxSpeed) * 0.2f;
         float currentTurnSpeed = TurnSpeed * movementFactor * understeerFactor;
 
         int direction = Speed >= 0 ? 1 : -1;
@@ -54,7 +75,6 @@ public class Car : GameObject
             Rotation -= currentTurnSpeed * direction * deltaTime;
         if (kstate.IsKeyDown(Keys.D))
             Rotation += currentTurnSpeed * direction * deltaTime;
-
 
         if (kstate.IsKeyDown(Keys.S))
         {
@@ -70,32 +90,12 @@ public class Car : GameObject
             _currentReverseDelay = ReverseDelay;
             EngineBrake(deltaTime, 1);
         }
-
-        Vector2 forward = new Vector2((float)Math.Cos(Rotation), (float)Math.Sin(Rotation));
-        Vector2 desiredVelocity = forward * Speed;
-
-        float grip = 5f;
-
-        if (kstate.IsKeyDown(Keys.Space))
-        {
-            grip = 1f;
-            EngineBrake(deltaTime, 0.5f);
-        }
-
-        Velocity = Vector2.Lerp(Velocity, desiredVelocity, grip * deltaTime);
-        Position += Velocity * deltaTime;
-
-        rect.X = (int)(Position.X - (Texture.Width / 2f));
-        rect.Y = (int)(Position.Y - (Texture.Height / 2f));
     }
 
     private void Accelerate(float deltaTime)
     {
-        if (Speed < 0)
-            Speed += BrakeForce * deltaTime;
-        else
-            Speed += Acceleration * deltaTime;
-
+        if (Speed < 0) Speed += BrakeForce * deltaTime;
+        else Speed += Acceleration * deltaTime;
         Speed = Math.Clamp(Speed, -MaxReverseSpeed, MaxSpeed);
     }
 
@@ -109,17 +109,12 @@ public class Car : GameObject
         else if (Speed == 0)
         {
             _currentReverseDelay -= deltaTime;
-
-            if (_currentReverseDelay <= 0)
-            {
-                Speed -= Acceleration * deltaTime;
-            }
+            if (_currentReverseDelay <= 0) Speed -= Acceleration * deltaTime;
         }
         else
         {
             Speed -= Acceleration * deltaTime;
         }
-
         Speed = Math.Clamp(Speed, -MaxReverseSpeed, MaxSpeed);
     }
 
