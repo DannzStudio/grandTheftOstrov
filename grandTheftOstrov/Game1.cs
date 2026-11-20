@@ -19,7 +19,7 @@ public class Game1 : Game
         _graphics.PreferredBackBufferHeight = 720;
 
         _graphics.SynchronizeWithVerticalRetrace = false;
-        IsFixedTimeStep = false;
+        IsFixedTimeStep = true;
 
         IsMouseVisible = true;
     }

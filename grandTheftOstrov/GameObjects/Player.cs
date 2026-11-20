@@ -13,10 +13,10 @@ public class Player : GameObject
     public Color ObjectColor = Color.White;
 
     private Game1 game;
-    public Rectangle colRect;
-    public Rectangle useRect;
-    int useOffset = 20;
-    Vector2 offsetSize;
+
+    public Collider UseHitbox = new Collider();
+    private int useOffset = 20;
+    private Vector2 offsetSize;
 
     private KeyboardState _previousKeyState;
 
@@ -26,11 +26,10 @@ public class Player : GameObject
         Position = startPosition;
         this.game = game;
 
-        colRect = new Rectangle((int)(startPosition.X - texture.Width / 2f), (int)(startPosition.Y - texture.Height / 2f), texture.Width, texture.Height);
+        offsetSize = new Vector2(Texture.Width + useOffset * 2, Texture.Height + useOffset * 2);
 
-        offsetSize = new Vector2(texture.Width + useOffset * 2, texture.Height + useOffset * 2);
-        useRect = new Rectangle((int)(startPosition.X - offsetSize.X / 2f), (int)(startPosition.Y - offsetSize.Y / 2f), (int)offsetSize.X, (int)offsetSize.Y);
-
+        Hitbox.Update(Position, Texture.Width, Texture.Height, 0f);
+        UseHitbox.Update(Position, (int)offsetSize.X, (int)offsetSize.Y, 0f);
     }
 
     public override void Update(GameTime gameTime)
@@ -47,6 +46,9 @@ public class Player : GameObject
         if (kstate.IsKeyDown(Keys.S) && !isInCar)
             Position.Y += Speed * deltaTime;
 
+        Hitbox.Update(Position, Texture.Width, Texture.Height, 0f);
+        UseHitbox.Update(Position, (int)offsetSize.X, (int)offsetSize.Y, 0f);
+
         if (kstate.IsKeyDown(Keys.F) && !_previousKeyState.IsKeyDown(Keys.F))
         {
             if (!isInCar)
@@ -55,7 +57,7 @@ public class Player : GameObject
                 {
                     if (obj is Car car)
                     {
-                        if (this.useRect.Intersects(car.rect))
+                        if (this.UseHitbox.Intersects(car.Hitbox, out _, out _))
                         {
                             car.isControlled = true;
                             this.isInCar = true;
@@ -68,11 +70,34 @@ public class Player : GameObject
             else
             {
                 ridingObj.isControlled = false;
+
+                Vector2 oldPos = Position;
+
                 Position.X += (float)Math.Cos(ridingObj.Rotation - MathF.PI / 2) * 37;
                 Position.Y += (float)Math.Sin(ridingObj.Rotation - MathF.PI / 2) * 37;
+
+                Hitbox.Update(Position, Texture.Width, Texture.Height, 0f);
+                bool steppingInHitbox = false;
+                foreach (GameObject obj in game._gameObjects)
+                {
+                    if (obj is not Player player)
+                    {
+                        if (Hitbox.Intersects(obj.Hitbox, out Vector2 normal, out float depth))
+                        {
+                            steppingInHitbox = true;
+                        }
+                    }
+                }
+                if (steppingInHitbox)
+                {
+                    Position = oldPos;
+                    Hitbox.Update(Position, Texture.Width, Texture.Height, 0f);
+                    Position.X += (float)Math.Cos(ridingObj.Rotation + MathF.PI / 2) * 37;
+                    Position.Y += (float)Math.Sin(ridingObj.Rotation + MathF.PI / 2) * 37;
+                }
+
                 ridingObj = null;
                 isInCar = false;
-                
             }
         }
 
@@ -81,13 +106,26 @@ public class Player : GameObject
             this.Position = ridingObj.Position;
         }
 
-        colRect.X = (int)(Position.X - (Texture.Width / 2f));
-        colRect.Y = (int)(Position.Y - (Texture.Height / 2f));
-
-        useRect.X = (int)(Position.X - (offsetSize.X / 2f));
-        useRect.Y = (int)(Position.Y - (offsetSize.Y / 2f));
-
         _previousKeyState = kstate;
+
+        if(!isInCar) ResolveCollisions();
+    }
+
+    private void ResolveCollisions()
+    {
+        foreach (GameObject obj in game._gameObjects)
+        {
+            if (obj is not Player player)
+            {
+                if (Hitbox.Intersects(obj.Hitbox, out Vector2 normal, out float depth))
+                {
+                    Position += normal * (depth + 0.05f);
+
+                    Hitbox.Update(Position, Texture.Width, Texture.Height, 0f);
+                    UseHitbox.Update(Position, (int)offsetSize.X, (int)offsetSize.Y, 0f);
+                }
+            }
+        }
     }
 
     public override void Draw(SpriteBatch spriteBatch)

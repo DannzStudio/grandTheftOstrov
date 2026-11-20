@@ -8,10 +8,9 @@ using Microsoft.Xna.Framework.Graphics;
 public class GameObject
 {
     public Vector2 Position;
-    
 
-    // Klíčové slovo 'virtual' znamená, že specifické objekty (auto, budova) 
-    // si mohou tuto funkci později upravit podle sebe.
+    public Collider Hitbox = new Collider();
+
     public virtual void Update(GameTime gameTime)
     {
     }

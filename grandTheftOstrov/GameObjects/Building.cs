@@ -23,7 +23,8 @@ public class Building : GameObject
         Width = width;
         Height = height;
 
-        rect = new Rectangle((int)position.X, (int)position.Y, width, height);
+        Vector2 center = new Vector2(position.X + width / 2f, position.Y + height / 2f);
+        Hitbox.Update(center, width, height, 0f);
     }
 
     public override void Draw(SpriteBatch spriteBatch)
