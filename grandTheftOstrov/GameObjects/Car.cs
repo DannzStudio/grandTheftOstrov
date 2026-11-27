@@ -28,6 +28,8 @@ public class Car : GameObject
     public Texture2D Texture;
     public Color ObjectColor = Color.White;
 
+    public float SpeedNormalized => Math.Clamp(Velocity.Length() / MaxSpeed, 0f, 1f);
+
     public Car(Texture2D texture, Vector2 startPosition, Game1 game)
     {
         Texture = texture;
@@ -41,7 +43,7 @@ public class Car : GameObject
     {
         public Vector2 Position;
         public float Rotation;
-        public float Alpha; // Průhlednost, aby postupně mizely
+        public float Alpha;
     }
 
     private readonly List<SkidMark> _skidMarks = new List<SkidMark>();
@@ -79,8 +81,8 @@ public class Car : GameObject
         Vector2 right = new Vector2(-forward.Y, forward.X);
         float lateralSpeed = Math.Abs(Vector2.Dot(Velocity, right));
 
-        bool isDrifting = (Keyboard.GetState().IsKeyDown(Keys.Space) && isControlled && Velocity.Length() > 80f)
-                          || lateralSpeed > 140f;
+        bool isDrifting = (Keyboard.GetState().IsKeyDown(Keys.Space) && isControlled && Velocity.Length() > 10f)
+                          || lateralSpeed > 500f;
 
         SkidMarks(forward, isDrifting, deltaTime);
 
@@ -232,12 +234,10 @@ public class Car : GameObject
                 Alpha = 0.45f
             });
 
-            // Limit počtu stop, ať seznam neroste donekonečna
             if (_skidMarks.Count > 600)
                 _skidMarks.RemoveAt(0);
         }
 
-        // Postupné blednutí starších stop
         for (int i = _skidMarks.Count - 1; i >= 0; i--)
         {
             var mark = _skidMarks[i];
@@ -263,7 +263,7 @@ public class Car : GameObject
                     Color.Black * mark.Alpha,
                     mark.Rotation,
                     markOrigin,
-                    new Vector2(1f, 1.5f),
+                    new Vector2(1f, 0.3f),
                     SpriteEffects.None,
                     0f
                 );

@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="grandTheftOstrov/grandTheftOstrov.csproj" />
+  <Project Path="MapEditor/MapEditor.csproj" Id="06350e0c-bb3a-4d94-a9a8-9c49a876ba2f" />
 </Solution>
